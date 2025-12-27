@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>計算機</title>
+  <style>
+    /* Basic reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .calculator {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      width: 320px;
+    }
+
+    .display {
+      width: 100%;
+      height: 60px;
+      background: #e9ecef;
+      color: #333;
+      font-size: 2rem;
+      text-align: right;
+      padding: 10px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 15px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 4px;
+      background: #f0f0f0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #e0e0e0;
+    }
+
+    .operator {
+      background: #ffc107;
+      color: #fff;
+    }
+    .operator:hover {
+      background: #e0a800;
+    }
+
+    .equals {
+      grid-column: span 4;
+      background: #28a745;
+      color: #fff;
+    }
+    .equals:hover {
+      background: #218838;
+    }
+    .clear {
+      background: #dc3545;
+      color: #fff;
+    }
+    .clear:hover {
+      background: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div id="display" class="display">0</div>
+    <div class="buttons">
+      <!-- Row 1 -->
+      <button class="clear" onclick="clearDisplay()">C</button>
+      <button onclick="appendInput('(')">(</button>
+      <button onclick="appendInput(')')">)</button>
+      <button class="operator" onclick="appendOperator('/')">÷</button>
+      <!-- Row 2 -->
+      <button onclick="appendInput('7')">7</button>
+      <button onclick="appendInput('8')">8</button>
+      <button onclick="appendInput('9')">9</button>
+      <button class="operator" onclick="appendOperator('*')">×</button>
+      <!-- Row 3 -->
+      <button onclick="appendInput('4')">4</button>
+      <button onclick="appendInput('5')">5</button>
+      <button onclick="appendInput('6')">6</button>
+      <button class="operator" onclick="appendOperator('-')">−</button>
+      <!-- Row 4 -->
+      <button onclick="appendInput('1')">1</button>
+      <button onclick="appendInput('2')">2</button>
+      <button onclick="appendInput('3')">3</button>
+      <button class="operator" onclick="appendOperator('+')">＋</button>
+      <!-- Row 5 -->
+      <button onclick="appendInput('0')" style="grid-column: span 2;">0</button>
+      <button onclick="appendInput('.')">.</button>
+      <button class="equals" onclick="calculateResult()">=</button>
+    </div>
+  </div>
+
+  <script>
+    // Current input stored as a string
+    let currentInput = "";
+
+    /**
+     * Updates the display based on the current input.
+     * If the input is empty, display '0' for clarity.
+     */
+    function updateDisplay() {
+      const display = document.getElementById('display');
+      display.textContent = currentInput === "" ? '0' : currentInput;
+    }
+
+    /**
+     * Appends a numeric or decimal input to the current input string.
+     * @param {string} value - The numeric or decimal character to append.
+     */
+    function appendInput(value) {
+      currentInput += value;
+      updateDisplay();
+    }
+
+    /**
+     * Appends an operator to the current input. Ensures no duplicate operators.
+     * @param {string} operator - One of '+', '-', '*', '/'.
+     */
+    function appendOperator(operator) {
+      // Avoid adding two operators consecutively
+      if (currentInput === "" && operator !== '-') {
+        return;
+      }
+      const lastChar = currentInput.slice(-1);
+      if ('+-*/'.includes(lastChar)) {
+        // Replace the last operator with the new one
+        currentInput = currentInput.slice(0, -1) + operator;
+      } else {
+        currentInput += operator;
+      }
+      updateDisplay();
+    }
+
+    /**
+     * Clears the current input, resetting the display to zero.
+     */
+    function clearDisplay() {
+      currentInput = "";
+      updateDisplay();
+    }
+
+    /**
+     * Calculates the result of the arithmetic expression in currentInput.
+     * Uses JavaScript's eval carefully; wraps in try-catch to handle errors.
+     */
+    function calculateResult() {
+      if (currentInput === "") {
+        return;
+      }
+      try {
+        // Evaluate the expression. Replace any unicode divide/multiply if needed.
+        const sanitized = currentInput.replace(/÷/g, '/').replace(/×/g, '*');
+        const result = eval(sanitized);
+        currentInput = result.toString();
+        updateDisplay();
+      } catch (e) {
+        alert('式が無効です');
+      }
+    }
+
+    /**
+     * Handles keyboard events to enable input via the keyboard.
+     * Supports numeric keys, operators, parentheses, decimal point, Enter for calculation,
+     * Backspace for deleting the last character, and Escape to clear the display.
+     */
+    document.addEventListener('keydown', (event) => {
+      const { key } = event;
+      // If a numeric key is pressed
+      if (/^[0-9]$/.test(key)) {
+        appendInput(key);
+        return;
+      }
+      // Decimal point
+      if (key === '.') {
+        appendInput('.');
+        return;
+      }
+      // Operators
+      if (['+', '-', '*', '/'].includes(key)) {
+        appendOperator(key);
+        return;
+      }
+      // Parentheses
+      if (key === '(' || key === ')') {
+        appendInput(key);
+        return;
+      }
+      // Enter or equals triggers evaluation
+      if (key === 'Enter' || key === '=') {
+        calculateResult();
+        return;
+      }
+      // Backspace deletes last character
+      if (key === 'Backspace') {
+        // Remove last character and update display
+        currentInput = currentInput.slice(0, -1);
+        updateDisplay();
+        return;
+      }
+      // Escape clears the entire input
+      if (key === 'Escape') {
+        clearDisplay();
+      }
+    });
+  </script>
+</body>
+</html>
